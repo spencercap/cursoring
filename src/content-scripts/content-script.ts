@@ -1,26 +1,9 @@
 console.log('Hello from the content-script');
 
-
-
-const el = document.createElement('BUTTON');
-el.style.position = 'absolute';
-el.style.transitionDuration = '200ms';
-el.innerText = 'button!';
-document.body.appendChild(el);
-
-setInterval(() => {
-	// console.log('Hello from the content-script');
-
-	el.style.top = (Math.random() * window.innerHeight) + 'px';
-	el.style.left = (Math.random() * window.innerWidth) + 'px';
-}, 500);
-
-
-
 // FIREBASE
 import firebase from 'firebase/app';
 import 'firebase/auth';
-// import 'firebase/firestore';
+import 'firebase/firestore';
 import 'firebase/database';
 
 // firebase config
@@ -37,15 +20,125 @@ const config = {
 const firebaseApp = firebase.initializeApp(config); // credentials.config
 const fb = firebase;
 const auth = firebaseApp.auth();
-// const db = firebaseApp.firestore();
+const db = firebaseApp.firestore();
 const rtdb = firebaseApp.database();
+// console.log('firebase got', fb, auth, db, rtdb);
 
-console.log('got', fb, auth, rtdb);
 
 
-auth.onAuthStateChanged(function (user) {
-	console.log('got a user', user);
+//
+// const bg = browser.extension.getBackgroundPage();
+// console.log('bg', bg);
+
+// init rtdb path
+let rtdbPath = '';
+const host = window.location.host;
+const path = window.location.pathname;
+const hostFormatted = host.replaceAll('.', '*');
+const pathFormatted = path.replaceAll('/', '>');
+rtdbPath = `/pages/${hostFormatted}/${pathFormatted}/`;
+
+
+
+//
+let uid = '';
+let username = 'anonymous';
+const getUid = async () => {
+	// console.log('getUid started');
+
+	// uid
+	const gotUid: string = await browser.runtime.sendMessage({ callFunc: 'getUid' });
+	console.log('gotUid', gotUid);
+	if (gotUid) uid = gotUid;
+
+	// username
+	const gotUsernameData = await browser.storage.local.get(['username']);
+	if (gotUsernameData && gotUsernameData.username) {
+		username = gotUsernameData.username;
+		console.log('username', username);
+	}
+
+	if (gotUid) {
+
+		// init presence
+		const writingRef = rtdb.ref(`${rtdbPath}/${uid}`);
+		rtdb.ref('.info/connected').on('value', async (snap) => {
+			// If we're not currently connected, don't do anything.
+			if (snap.val() == false) {
+				return;
+			}
+			// init disconnect operation
+			await writingRef.onDisconnect().remove();
+			// write is online
+			await writingRef.update({
+				uid: uid,
+				username: username
+			});
+		});
+	}
+};
+
+getUid();
+
+
+
+
+// browser.runtime.sendMessage({
+// 	type: 'update:username',
+// 	username: inUsername
+// });
+// chrome.runtime.onMessage.addListener((msg: any) => {
+// 	//
+// 	console.log('content-script got msg', msg);
+
+// 	return true;
+
+// });
+
+// chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// 	console.log('message', message);
+// 	return true;
+// });
+
+chrome.runtime.onMessage.addListener(
+	function (request, sender, sendResponse) {
+		if (request.message === 'start') {
+			console.log('started');
+		}
+	}
+);
+
+
+
+// moving button
+const el = document.createElement('BUTTON');
+el.style.position = 'absolute';
+el.style.transitionDuration = '200ms';
+el.innerText = 'button!';
+document.body.appendChild(el);
+
+
+document.body.addEventListener('mousemove', async (ev) => {
+	// console.log('mouse', ev);
+	const x = ev.pageX;
+	const y = ev.pageY;
+
+	if (uid) {
+		await rtdb.ref(`${rtdbPath}/${uid}`).update({
+			x,
+			y
+		});
+	}
 });
 
 
-auth.signInAnonymously();
+
+// setInterval(async () => {
+// 	// console.log('Hello from the content-script');
+
+// 	el.style.top = (Math.random() * window.innerHeight) + 'px';
+// 	el.style.left = (Math.random() * window.innerWidth) + 'px';
+
+// }, 500);
+
+

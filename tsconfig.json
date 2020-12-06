@@ -10,10 +10,13 @@
 		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
 		"sourceMap": true,
+		"rootDir": "src",
+        "outDir": "dist/js",
 		"baseUrl": ".",
 		"types": [
 			"webpack-env",
-			"firefox-webext-browser"
+			"firefox-webext-browser",
+			"chrome"
 		],
 		"paths": {
 			"@/*": [

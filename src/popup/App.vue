@@ -1,6 +1,12 @@
 <template>
 	<span>popup:</span>
 	<hello-world />
+
+	<div>
+		<p>set username:</p>
+
+		<input v-model="username" type="text" placeholder="username">
+	</div>
 </template>
 
 <script lang="ts">
@@ -9,7 +15,43 @@ import HelloWorld from '@/components/HelloWorld.vue';
 
 export default defineComponent({
 	name: 'App',
-	components: { HelloWorld }
+	components: { HelloWorld },
+	data() {
+		return {
+			username: '',
+		};
+	},
+	watch: {
+		username: {
+			async handler(inUsername: string) {
+				// localStorage.setItem('username', inUsername);
+				await browser.storage.local.set({username: inUsername});
+
+				// "browser" is firefox+chrome+supports async, "chrome" is ...?
+				chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+					const activeTab = tabs[0];
+					if (activeTab && activeTab.id) {
+						chrome.tabs.sendMessage(activeTab.id, {'message': 'start'});
+					}
+				});
+
+				// console.log('browser', browser);
+				// console.log('chrome', chrome);
+
+				// chrome.storage.local.set({username: inUsername});
+				// await browser.storage.local.set({username: inUsername});
+			}
+		}
+	},
+	async mounted() {
+		console.log('popup mounted');
+
+		// has username?
+		const gotUsernameData = await browser.storage.local.get(['username']);
+		if (gotUsernameData && gotUsernameData.username) {
+			this.username = gotUsernameData.username;
+		}
+	}
 });
 </script>
 
