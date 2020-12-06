@@ -1,27 +1,4 @@
-// firebase
-import firebase from 'firebase/app';
-import 'firebase/auth';
-import 'firebase/firestore';
-import 'firebase/database';
-
-// firebase config
-const config = {
-	apiKey: 'AIzaSyDgZLBk6ibee-z9Ii-lZHtf7TtCgyIw3VI',
-	authDomain: 'cursoring.firebaseapp.com',
-	databaseURL: 'https://cursoring-default-rtdb.firebaseio.com',
-	projectId: 'cursoring',
-	storageBucket: 'cursoring.appspot.com',
-	messagingSenderId: '659784909263',
-	appId: '1:659784909263:web:943bb8ba3b398e0b13d2ba',
-	measurementId: 'G-ZFDDERW432'
-};
-const firebaseApp = firebase.initializeApp(config); // credentials.config
-const fb = firebase;
-const auth = firebaseApp.auth();
-const db = firebaseApp.firestore();
-const rtdb = firebaseApp.database();
-// console.log('firebase got', fb, auth, db, rtdb);
-
+import { auth, rtdb } from '@/firebase/index';
 
 
 // uid
