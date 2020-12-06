@@ -24,6 +24,18 @@ initUserName();
 
 
 
+// userColor
+let userColor = '';
+const initUserColor = async () => {
+	const gotUserColorData = await browser.storage.local.get(['userColor']);
+	if (gotUserColorData && gotUserColorData.userColor) {
+		userColor = gotUserColorData.userColor;
+	}
+};
+initUserColor();
+
+
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 	console.log('background got message');
@@ -41,12 +53,18 @@ browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 		await browser.storage.local.set({ username: username });
 		return 'finished';
 	}
+	// set userColor to storage
+	else if (request.type == 'update:userColor') {
+		userColor = request.userColor;
+		await browser.storage.local.set({ userColor: userColor });
+	}
 	// update rtdb xy
 	else if (request.type == 'update:pos') {
 		if (uid) {
 			await rtdb.ref(`${request.rtdbPath}/${uid}`).update({
 				uid,
 				username,
+				userColor: userColor || null,
 				x: request.data.x,
 				y: request.data.y
 			});

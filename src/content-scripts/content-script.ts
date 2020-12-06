@@ -62,19 +62,72 @@ chrome.runtime.onMessage.addListener(
 
 
 
+// cursor
+let myCursor: undefined | HTMLDivElement;
+const initMyCursor = () => {
+	myCursor = document.createElement('div');
+
+	// styles
+	myCursor.style.position = 'absolute';
+	myCursor.style.pointerEvents = 'none';
+	myCursor.style.width = '24px';
+	myCursor.style.height = '24px';
+
+	myCursor.style.backgroundColor = '#ff0000';
+
+	// myCursor.style.top = y + 'px';
+	// myCursor.style.left = x + 'px';
+
+	document.body.appendChild(myCursor);
+};
+initMyCursor();
+
+
+
+//
+chrome.storage.onChanged.addListener((changes, namespace) => {
+	// console.log('storage changed');
+
+	console.log('changes', changes);
+	// console.log('namespace', namespace);
+
+	for (const change in changes) {
+		if (change == 'userColor') {
+			if (myCursor) {
+				myCursor.style.backgroundColor = changes[change].newValue;
+			}
+		}
+	}
+});
+
+
+
+// mouse
+let x = 0;
+let y = 0;
 document.body.addEventListener('mousemove', async (ev) => {
 	// console.log('mouse', ev);
-	const x = ev.pageX;
-	const y = ev.pageY;
+	x = ev.pageX;
+	y = ev.pageY;
 	// const down = ev.cl
 
-	// send data to backend for rtdb update
+
+
+	// move cursor
+	if (myCursor) {
+		myCursor.style.top = y + 'px';
+		myCursor.style.left = x + 'px';
+	}
+
+
+
+	// rtdb: send data to backend for rtdb update
 	await browser.runtime
 		.sendMessage({
 			type: 'update:pos',
 			rtdbPath,
 			data: {
-				mousedown: false,
+				// mousedown: false,
 				x,
 				y
 			}

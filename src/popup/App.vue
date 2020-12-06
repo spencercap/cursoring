@@ -4,8 +4,12 @@
 
 	<div>
 		<p>set username:</p>
-
 		<input v-model="username" type="text" placeholder="username">
+	</div>
+
+	<div>
+		<p>user color:</p>
+		<input v-model="userColor" type="text" placeholder="#ff00ff">
 	</div>
 </template>
 
@@ -19,6 +23,7 @@ export default defineComponent({
 	data() {
 		return {
 			username: '',
+			userColor: ''
 		};
 	},
 	watch: {
@@ -42,10 +47,24 @@ export default defineComponent({
 				// });
 
 				// console.log('browser', browser);
-				// console.log('chrome', chrome);
+				console.log('chrome', chrome);
+
+				chrome.storage.local.get(null, function(items) {
+					const allKeys = Object.keys(items);
+					console.log(allKeys);
+				});
 
 				// chrome.storage.local.set({username: inUsername});
 				// await browser.storage.local.set({username: inUsername});
+			}
+		},
+		userColor: {
+			async handler(inHexColor: string) {
+				await browser.runtime
+					.sendMessage({
+						type: 'update:userColor',
+						userColor: inHexColor
+					});
 			}
 		}
 	},
@@ -56,6 +75,12 @@ export default defineComponent({
 		const gotUsernameData = await browser.storage.local.get(['username']);
 		if (gotUsernameData && gotUsernameData.username) {
 			this.username = gotUsernameData.username;
+		}
+
+		// has username set?
+		const gotUserColorData = await browser.storage.local.get(['userColor']);
+		if (gotUserColorData && gotUserColorData.userColor) {
+			this.userColor = gotUsernameData.userColor;
 		}
 	}
 });
