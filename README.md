@@ -1,4 +1,4 @@
-# vue-3-ext
+# cursoring
 
 vue 3 based chrome extension in typescript (SFC syntax)
 

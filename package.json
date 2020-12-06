@@ -1,5 +1,5 @@
 {
-	"name": "vue-3-ext",
+	"name": "cursoring",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
@@ -38,19 +38,21 @@
 		"parserOptions": {
 			"ecmaVersion": 2020
 		},
-		"ignorePatterns": [ "dist/*" ],
+		"ignorePatterns": [
+			"dist/*"
+		],
 		"rules": {
 			"quotes": [
-					"error",
-					"single"
+				"error",
+				"single"
 			],
 			"indent": [
-					"warn",
-					"tab"
+				"warn",
+				"tab"
 			],
 			"semi": [
-					"warn",
-					"always"
+				"warn",
+				"always"
 			]
 		}
 	},

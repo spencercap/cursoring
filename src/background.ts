@@ -3,6 +3,10 @@ browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	console.log('Hello from the background');
 
 	browser.tabs.executeScript({
-		file: 'content-script.js',
+		file: 'content-scripts/content-script.js',
 	});
 });
+
+setInterval(() => {
+	console.log('Hello from the background');
+}, 2000);
