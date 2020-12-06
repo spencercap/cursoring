@@ -24,16 +24,22 @@ export default defineComponent({
 	watch: {
 		username: {
 			async handler(inUsername: string) {
-				// localStorage.setItem('username', inUsername);
-				await browser.storage.local.set({username: inUsername});
+				// await browser.storage.local.set({username: inUsername});
+
+				const res: string = await browser.runtime
+					.sendMessage({
+						type: 'update:username',
+						username: inUsername
+					});
+				console.log('res', res);
 
 				// "browser" is firefox+chrome+supports async, "chrome" is ...?
-				chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
-					const activeTab = tabs[0];
-					if (activeTab && activeTab.id) {
-						chrome.tabs.sendMessage(activeTab.id, {'message': 'start'});
-					}
-				});
+				// chrome.tabs.query({currentWindow: true, active: true}, function (tabs){
+				// 	const activeTab = tabs[0];
+				// 	if (activeTab && activeTab.id) {
+				// 		chrome.tabs.sendMessage(activeTab.id, {'message': 'start'});
+				// 	}
+				// });
 
 				// console.log('browser', browser);
 				// console.log('chrome', chrome);
@@ -46,7 +52,7 @@ export default defineComponent({
 	async mounted() {
 		console.log('popup mounted');
 
-		// has username?
+		// has username set?
 		const gotUsernameData = await browser.storage.local.get(['username']);
 		if (gotUsernameData && gotUsernameData.username) {
 			this.username = gotUsernameData.username;
