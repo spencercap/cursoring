@@ -1,4 +1,6 @@
 module.exports = {
+	// no minify
+	chainWebpack: config => config.optimization.minimize(false),
 	pages: {
 		popup: {
 			template: 'public/browser-extension.html',
