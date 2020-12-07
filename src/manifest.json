@@ -33,10 +33,10 @@
 	},
 	"content_scripts": [
 		{
-		"matches": [
-			"*://*/*"
+			"matches": [
+				"*://*/*"
 			],
-		"js": ["js/content-script.js"]
+			"js": ["js/content-script.js"]
 		}
 	],
 	"options_ui": {

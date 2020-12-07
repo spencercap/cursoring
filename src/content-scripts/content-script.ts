@@ -47,7 +47,7 @@ const getUid = async () => {
 		});
 	}
 };
-getUid(); // init
+// getUid(); // init
 
 
 
@@ -62,6 +62,23 @@ chrome.runtime.onMessage.addListener(
 
 
 
+// init storage
+const storage = {} as Record<string, string>;
+const initStorage = async () => {
+	const items = await browser.storage.local.get();
+	storage.userName = items.userName || 'anonymous';
+	storage.userColor = items.userColor || 'pink';
+	// console.log('got storage', storage);
+};
+// listen to storage
+chrome.storage.onChanged.addListener((changes, namespace) => {
+	for (const changeKey in changes) {
+		storage[changeKey] = changes[changeKey].newValue;
+	}
+});
+
+
+
 // cursor
 let myCursor: undefined | HTMLDivElement;
 const initMyCursor = () => {
@@ -73,32 +90,14 @@ const initMyCursor = () => {
 	myCursor.style.width = '24px';
 	myCursor.style.height = '24px';
 
-	myCursor.style.backgroundColor = '#ff0000';
+	// dynamics
+	myCursor.style.backgroundColor = storage.userColor;
 
 	// myCursor.style.top = y + 'px';
 	// myCursor.style.left = x + 'px';
 
 	document.body.appendChild(myCursor);
 };
-initMyCursor();
-
-
-
-//
-chrome.storage.onChanged.addListener((changes, namespace) => {
-	// console.log('storage changed');
-
-	console.log('changes', changes);
-	// console.log('namespace', namespace);
-
-	for (const change in changes) {
-		if (change == 'userColor') {
-			if (myCursor) {
-				myCursor.style.backgroundColor = changes[change].newValue;
-			}
-		}
-	}
-});
 
 
 
@@ -133,3 +132,12 @@ document.body.addEventListener('mousemove', async (ev) => {
 			}
 		});
 });
+
+
+
+// start everything up
+window.addEventListener('load', async () => {
+	await getUid();
+	await initStorage();
+	initMyCursor();
+}, false);
