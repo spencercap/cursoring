@@ -20,19 +20,19 @@ rtdbPath = `/pages/${hostFormatted}/${pathFormatted}/`;
 
 
 //
-let uid = '';
-const getUid = async () => {
+let myUid = undefined as undefined | Uid;
+const getUid = async (): Promise<string | undefined> => {
 	// console.log('getUid started');
 
-	// uid
-	const gotUid: undefined | string = await browser.runtime.sendMessage({ type: 'get:uid' });
+	// myUid
+	const gotUid: undefined | Uid = await browser.runtime.sendMessage({ type: 'get:uid' });
 	console.log('gotUid', gotUid);
-	if (gotUid) uid = gotUid;
+	if (gotUid) myUid = gotUid;
 
 	//
 	if (gotUid) {
 		// init presence
-		const writingRef = rtdb.ref(`${rtdbPath}/${uid}`);
+		const writingRef = rtdb.ref(`${rtdbPath}/${myUid}`);
 		rtdb.ref('.info/connected').on('value', async (snap) => {
 			// If we're not currently connected, don't do anything.
 			if (snap.val() == false) {
@@ -42,12 +42,13 @@ const getUid = async () => {
 			await writingRef.onDisconnect().remove();
 			// write is online
 			await writingRef.update({
-				uid: uid
+				uid: myUid
 			});
 		});
 	}
+
+	return gotUid;
 };
-// getUid(); // init
 
 
 
@@ -70,34 +71,58 @@ const initStorage = async () => {
 	storage.userColor = items.userColor || 'pink';
 	// console.log('got storage', storage);
 };
-// listen to storage
-chrome.storage.onChanged.addListener((changes, namespace) => {
-	for (const changeKey in changes) {
-		storage[changeKey] = changes[changeKey].newValue;
-	}
-});
+
+
+
+// cursor element generator
+const makeCursorEl = (uid: Uid): HTMLDivElement => {
+	const el = document.createElement('div');
+	el.setAttribute('id', uid);
+
+	// styles
+	el.style.position = 'absolute';
+	el.style.pointerEvents = 'none';
+	el.style.width = '24px';
+	el.style.height = '24px';
+	el.style.borderBottomRightRadius = '12px';
+	el.style.opacity = '0.6';
+	el.style.zIndex = '9999';
+
+	return el;
+};
 
 
 
 // cursor
 let myCursor: undefined | HTMLDivElement;
-const initMyCursor = () => {
-	myCursor = document.createElement('div');
-
-	// styles
-	myCursor.style.position = 'absolute';
-	myCursor.style.pointerEvents = 'none';
-	myCursor.style.width = '24px';
-	myCursor.style.height = '24px';
+const initMyCursor = (uid: Uid) => {
+	myCursor = makeCursorEl(uid);
 
 	// dynamics
 	myCursor.style.backgroundColor = storage.userColor;
-
-	// myCursor.style.top = y + 'px';
-	// myCursor.style.left = x + 'px';
+	myCursor.innerText = storage.userName;
+	// update xy in mouse move event
 
 	document.body.appendChild(myCursor);
 };
+
+
+
+// listen to storage
+chrome.storage.onChanged.addListener((changes, namespace) => {
+	for (const changeKey in changes) {
+		storage[changeKey] = changes[changeKey].newValue;
+
+		// update myCursor
+		if (myCursor) {
+			if (changeKey == 'userColor') {
+				myCursor.style.backgroundColor = storage.userColor;
+			} else if (changeKey == 'userName') {
+				myCursor.innerText = storage.userName;
+			}
+		}
+	}
+});
 
 
 
@@ -135,9 +160,81 @@ document.body.addEventListener('mousemove', async (ev) => {
 
 
 
+type Uid = string;
+type UserCursor = {
+	uid: Uid;
+	userName: string;
+	userColor: string;
+	x?: number;
+	y?: number;
+}
+
+// init rtdb site listen
+const cursorMap = new Map() as Map<Uid, UserCursor>;
+const domCursors = new Map() as Map<Uid, HTMLDivElement>;
+rtdb.ref(rtdbPath).on('value', (snap) => {
+	console.log('val', snap.val());
+
+	const rawRtdbCursorObj = snap.val() as null | Record<Uid, UserCursor>;
+	if (!rawRtdbCursorObj) return;
+
+	const tempCursorMap = new Map() as Map<Uid, UserCursor>;
+
+	for (const uid in rawRtdbCursorObj) {
+		tempCursorMap.set(uid, rawRtdbCursorObj[uid]);
+
+		// check for NEW dom cursors to add
+		if ((uid !== myUid) && !cursorMap.has(uid)) {
+			// const domCursor = document.createElement('div');
+			const c = makeCursorEl(uid);
+			domCursors.set(uid, c);
+			document.body.appendChild(c);
+		}
+
+		cursorMap.set(uid, rawRtdbCursorObj[uid]); // updates + sets news
+	}
+
+	console.log('tempCursorMap', tempCursorMap);
+	console.log('cursorMap 1', cursorMap);
+
+	cursorMap.forEach((userCursor, uid) => {
+		console.log('iterating on', uid);
+
+		if (!tempCursorMap.has(uid)) {
+			cursorMap.delete(uid);
+
+			const c = domCursors.get(uid);
+			if (c) {
+				document.body.removeChild(c);
+			} else {
+				console.warn('no dom element to remove');
+			}
+		} else {
+			console.log('printing', uid);
+
+			// update remaining cursors
+			const c = domCursors.get(uid);
+			if (c) {
+				c.style.backgroundColor = userCursor.userColor;
+				c.innerText = userCursor.userName;
+				c.style.left = (userCursor.x || 0) + 'px';
+				c.style.top = (userCursor.y || 0) + 'px';
+			}
+		}
+	});
+
+	console.log('cursorMap 2', cursorMap);
+});
+
+
+
 // start everything up
 window.addEventListener('load', async () => {
-	await getUid();
+	const myUid = await getUid();
+
 	await initStorage();
-	initMyCursor();
+
+	if (myUid) {
+		initMyCursor(myUid);
+	}
 }, false);
