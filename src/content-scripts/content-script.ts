@@ -135,12 +135,23 @@ document.body.addEventListener('mousemove', async (ev) => {
 	y = ev.pageY;
 	// const down = ev.cl
 
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+
+	const xVw = (x / width) * 100;
+	const yVh = (y / height) * 100;
+	console.log(xVw, yVh);
 
 
 	// move cursor
 	if (myCursor) {
-		myCursor.style.top = y + 'px';
-		myCursor.style.left = x + 'px';
+		// myCursor.style.left = x + 'px';
+		// myCursor.style.top = y + 'px';
+
+		myCursor.style.left = xVw + 'vw';
+		myCursor.style.top = yVh + 'vh';
+	} else {
+		console.warn('myCursor not defined');
 	}
 
 
@@ -152,14 +163,15 @@ document.body.addEventListener('mousemove', async (ev) => {
 			rtdbPath,
 			data: {
 				// mousedown: false,
-				x,
-				y
+				x: xVw,
+				y: yVh
 			}
 		});
 });
 
 
 
+// types
 type Uid = string;
 type UserCursor = {
 	uid: Uid;
@@ -173,7 +185,7 @@ type UserCursor = {
 const cursorMap = new Map() as Map<Uid, UserCursor>;
 const domCursors = new Map() as Map<Uid, HTMLDivElement>;
 rtdb.ref(rtdbPath).on('value', (snap) => {
-	console.log('val', snap.val());
+	// console.log('val', snap.val());
 
 	const rawRtdbCursorObj = snap.val() as null | Record<Uid, UserCursor>;
 	if (!rawRtdbCursorObj) return;
@@ -194,11 +206,11 @@ rtdb.ref(rtdbPath).on('value', (snap) => {
 		cursorMap.set(uid, rawRtdbCursorObj[uid]); // updates + sets news
 	}
 
-	console.log('tempCursorMap', tempCursorMap);
-	console.log('cursorMap 1', cursorMap);
+	// console.log('tempCursorMap', tempCursorMap);
+	// console.log('cursorMap 1', cursorMap);
 
 	cursorMap.forEach((userCursor, uid) => {
-		console.log('iterating on', uid);
+		// console.log('iterating on', uid);
 
 		if (!tempCursorMap.has(uid)) {
 			cursorMap.delete(uid);
@@ -210,20 +222,24 @@ rtdb.ref(rtdbPath).on('value', (snap) => {
 				console.warn('no dom element to remove');
 			}
 		} else {
-			console.log('printing', uid);
+			// console.log('printing', uid);
 
 			// update remaining cursors
 			const c = domCursors.get(uid);
 			if (c) {
 				c.style.backgroundColor = userCursor.userColor;
 				c.innerText = userCursor.userName;
-				c.style.left = (userCursor.x || 0) + 'px';
-				c.style.top = (userCursor.y || 0) + 'px';
+
+				// c.style.left = (userCursor.x || 0) + 'px';
+				// c.style.top = (userCursor.y || 0) + 'px';
+
+				c.style.left = (userCursor.x || 0) + 'vw';
+				c.style.top = (userCursor.y || 0) + 'vh';
 			}
 		}
 	});
 
-	console.log('cursorMap 2', cursorMap);
+	// console.log('cursorMap 2', cursorMap);
 });
 
 
@@ -236,5 +252,7 @@ window.addEventListener('load', async () => {
 
 	if (myUid) {
 		initMyCursor(myUid);
+	} else {
+		console.warn('no myUid for initMyCursor');
 	}
 }, false);
