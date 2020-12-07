@@ -140,7 +140,7 @@ document.body.addEventListener('mousemove', async (ev) => {
 
 	const xVw = (x / width) * 100;
 	const yVh = (y / height) * 100;
-	console.log(xVw, yVh);
+	// console.log(xVw, yVh);
 
 
 	// move cursor
@@ -256,3 +256,15 @@ window.addEventListener('load', async () => {
 		console.warn('no myUid for initMyCursor');
 	}
 }, false);
+
+
+
+
+// init vue el
+const cursorsEl = document.createElement('div');
+cursorsEl.setAttribute('id', 'cursors');
+document.body.appendChild(cursorsEl);
+// init vue
+import { createApp } from 'vue';
+import Cursors from './Cursors.vue';
+createApp(Cursors).mount('#cursors');
