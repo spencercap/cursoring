@@ -14,7 +14,7 @@ let rtdbPath = '';
 const host = window.location.host;
 const path = window.location.pathname;
 const hostFormatted = host.replaceAll('.', '*');
-const pathFormatted = path.replaceAll('/', '>');
+const pathFormatted = path.replaceAll('/', '>').replaceAll('.', '*'); // accounts for .html
 rtdbPath = `/pages/${hostFormatted}/${pathFormatted}/`;
 
 
@@ -255,7 +255,113 @@ window.addEventListener('load', async () => {
 	} else {
 		console.warn('no myUid for initMyCursor');
 	}
+
+	// snag original site
+	// console.log('removing');
+	const docEl = document.documentElement;
+	// document.removeChild(docEl);
+	// console.log('poof!');
+
+	const widthPx = 800;
+
+	// no iframe origin issues because we're still on the same origin - hehe, chrome extensions...
+	const iframe = document.createElement('iframe');
+	iframe.height = '100%';
+	iframe.width = widthPx + 'px';
+	iframe.frameBorder = '0';
+	iframe.src = window.location.href;
+	iframe.setAttribute('onload', 'alert(`boop`)');
+
+	// eslint-disable-next-line quotes
+	// iframe.setAttribute('onload', `document.body.style.backgroundColor = 'red';`);
+
+	// eslint-disable-next-line quotes
+	iframe.setAttribute('onload', `document.dispatchEvent(new CustomEvent('boop'));`);
+
+	// const event = new CustomEvent('boop', {
+	// 	detail: {
+	// 		newVisibleContext: 'table'
+	// 	}
+	// });
+	// const event = new CustomEvent('boop');
+	// const event = new CustomEvent('boop');
+	// document.dispatchEvent(new CustomEvent('boop'));
+	document.addEventListener(
+		'boop',
+		(e) => {
+			console.log('beep beep');
+			console.log(e);
+			console.log('src', iframe.src);
+			// console.log('got custom event', (e as CustomEvent).detail);
+
+			// const deets = (e as CustomEvent).detail;
+
+			// if (deets.newVisibleContext) {
+			// 	this.visibleContext = deets.newVisibleContext;
+			// }
+		},
+		false
+	);
+
+	// eslint-disable-next-line quotes
+	// iframe.setAttribute('onload', `alert(this.contentWindow.location)`);
+	if (iframe && iframe.contentWindow) {
+		iframe.contentWindow.addEventListener('load', () => {
+			console.log('iframe loaded');
+			console.log('src', iframe.src);
+		});
+	} else {
+		console.error('no content window to listen to ');
+	}
+
+
+	// iframe.setAttribute('onload', '(e) => console.log(e)');
+
+	// container
+	const container = document.createElement('div');
+	container.setAttribute('id', 'cursoring');
+	container.style.position = 'fixed';
+	container.style.left = '0';
+	container.style.top = '0';
+	container.style.right = '0';
+	container.style.bottom = '0';
+
+	container.style.height = '100%';
+	container.style.margin = '0 auto';
+	container.style.zIndex = '999999';
+	// container.style.overflowX = 'scroll';
+	container.style.overflow = 'scroll';
+
+	// simple centering
+	container.style.display = 'grid';
+	container.style.placeItems = 'center';
+	// add iframe to container
+	container.appendChild(iframe);
+
+	// switch!
+	console.log('switching');
+	// document.removeChild(docEl);
+	// document.appendChild(container);
+	document.body.appendChild(container);
+	console.log('switched');
+
+	if (iframe && iframe.contentWindow) {
+		iframe.contentWindow.addEventListener('load', () => {
+			console.log('iframe loaded 2');
+			console.log('src', iframe.src);
+		});
+	} else {
+		console.error('no content window to listen to 2');
+	}
+
+	// setTimeout(() => {
+	// 	console.log('timeouted');
+	// 	document.appendChild(container);
+	// 	console.log('bewm');
+	// }, 1000);
 }, false);
+
+
 
 
 
